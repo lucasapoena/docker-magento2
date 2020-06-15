@@ -1,6 +1,7 @@
-FROM php:7.1-apache
+FROM php:7.0-apache
 
-MAINTAINER Rafael Corrêa Gomes <rafaelcgstz@gmail.com>
+# Basead: Rafael Corrêa Gomes <rafaelcgstz@gmail.com>
+MAINTAINER Lucas Apoena <contato@lucasapoena.eti.br>
 
 ENV XDEBUG_PORT 9000
 
@@ -9,20 +10,20 @@ ENV XDEBUG_PORT 9000
 RUN apt-get update \
 	&& DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
 	software-properties-common \
+	python-software-properties \
 	&& apt-get update \
 	&& DEBIAN_FRONTEND=noninteractive apt-get install -y \
 	libfreetype6-dev \
 	libicu-dev \
-  libssl-dev \
+  	libssl-dev \
 	libjpeg62-turbo-dev \
 	libmcrypt-dev \
+	libpng12-dev \
 	libedit-dev \
 	libedit2 \
 	libxslt1-dev \
 	apt-utils \
-	gnupg \
-	redis-tools \
-	mysql-client \
+  	mysql-client \
 	git \
 	vim \
 	wget \
@@ -73,14 +74,6 @@ RUN curl -sL https://deb.nodesource.com/setup_6.x | bash - \
 RUN	curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin/ --filename=composer
 RUN composer global require hirak/prestissimo
 
-# Install Code Sniffer
-
-RUN git clone https://github.com/magento/marketplace-eqp.git ~/.composer/vendor/magento/marketplace-eqp
-RUN cd ~/.composer/vendor/magento/marketplace-eqp && composer install
-RUN ln -s ~/.composer/vendor/magento/marketplace-eqp/vendor/bin/phpcs /usr/local/bin;
-
-ENV PATH="/var/www/.composer/vendor/bin/:${PATH}"
-
 # Install XDebug
 
 RUN yes | pecl install xdebug && \
@@ -101,12 +94,14 @@ RUN wget https://files.magerun.net/n98-magerun2.phar \
 
 # Configuring system
 
+
 ADD .docker/config/php.ini /usr/local/etc/php/php.ini
 ADD .docker/config/magento.conf /etc/apache2/sites-available/magento.conf
 ADD .docker/config/custom-xdebug.ini /usr/local/etc/php/conf.d/custom-xdebug.ini
 COPY .docker/bin/* /usr/local/bin/
 COPY .docker/users/* /var/www/
 RUN chmod +x /usr/local/bin/*
+RUN ls -la /usr/local/bin/
 RUN ln -s /etc/apache2/sites-available/magento.conf /etc/apache2/sites-enabled/magento.conf
 
 RUN curl -o /etc/bash_completion.d/m2install-bash-completion https://raw.githubusercontent.com/yvoronoy/m2install/master/m2install-bash-completion
@@ -120,6 +115,9 @@ RUN chmod 777 -Rf /var/www /var/www/.* \
 	&& chsh -s /bin/bash www-data\
 	&& a2enmod rewrite \
 	&& a2enmod headers
+
+RUN setup-cron
+RUN setup-mssql
 
 VOLUME /var/www/html
 WORKDIR /var/www/html
