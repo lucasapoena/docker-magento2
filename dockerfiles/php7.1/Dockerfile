@@ -1,6 +1,6 @@
 FROM php:7.1-apache
 
-# Basead: Rafael Corrêa Gomes <rafaelcgstz@gmail.com>
+# Basead: Rafael Corrêa Gomes <rafaelcgstz@gmail.com> 
 MAINTAINER Lucas Apoena <contato@lucasapoena.eti.br>
 
 ENV XDEBUG_PORT 9000
