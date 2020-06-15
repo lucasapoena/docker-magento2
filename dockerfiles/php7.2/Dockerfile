@@ -1,6 +1,5 @@
-FROM php:7.0-apache
+FROM php:7.2-apache
 
-# Basead: Rafael Corrêa Gomes <rafaelcgstz@gmail.com> 
 MAINTAINER Lucas Apoena <contato@lucasapoena.eti.br>
 
 ENV XDEBUG_PORT 9000
@@ -13,15 +12,16 @@ RUN apt-get update \
 	&& DEBIAN_FRONTEND=noninteractive apt-get install -y \
 	libfreetype6-dev \
 	libicu-dev \
-  	libssl-dev \
+  libssl-dev \
 	libjpeg62-turbo-dev \
 	libmcrypt-dev \
-	libpng-dev \
 	libedit-dev \
 	libedit2 \
 	libxslt1-dev \
 	apt-utils \
-  	mysql-client \
+	gnupg \
+	redis-tools \
+	mariadb-client\
 	git \
 	vim \
 	wget \
@@ -31,12 +31,7 @@ RUN apt-get update \
 	unzip \
 	tar \
 	cron \
-	gcc \
-	make \
-	autoconf \
-	libc-dev \
-	pkg-config \
-	bash-completion \
+	bash-completion \ 
 	&& apt-get clean
 
 # Install Magento Dependencies
@@ -48,7 +43,6 @@ RUN docker-php-ext-configure \
   	bcmath \
   	intl \
   	mbstring \
-  	mcrypt \
   	pdo_mysql \
   	soap \
   	xsl \
@@ -64,18 +58,29 @@ RUN apt-get update \
   	&& echo "extension=oauth.so" > /usr/local/etc/php/conf.d/docker-php-ext-oauth.ini
 
 # Install Node, NVM, NPM and Grunt
-
-RUN curl -sL https://deb.nodesource.com/setup_6.x | bash - \
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
   	&& apt-get install -y nodejs build-essential \
-    && curl https://raw.githubusercontent.com/creationix/nvm/v0.16.1/install.sh | sh \
+    && curl https://raw.githubusercontent.com/creationix/nvm/v0.35.2/install.sh | sh \
     && npm i -g grunt-cli yarn
+
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=DontWarn apt-key add - && \
+    echo "deb http://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
+    apt-get update && \
+    apt-get install --no-install-recommends yarn
 
 # Install Composer
 RUN	curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin/ --filename=composer
 RUN composer global require hirak/prestissimo
 
+# Install Code Sniffer
+RUN git clone https://github.com/magento/marketplace-eqp.git ~/.composer/vendor/magento/marketplace-eqp
+RUN cd ~/.composer/vendor/magento/marketplace-eqp && composer install
+RUN ln -s ~/.composer/vendor/magento/marketplace-eqp/vendor/bin/phpcs /usr/local/bin;
+
+ENV PATH="/var/www/.composer/vendor/bin/:${PATH}"
+
 # Install XDebug
-RUN yes | pecl install -o -f xdebug-2.8.1 && \
+RUN yes | pecl install xdebug && \
 	 echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/xdebug.iniOLD
 
 # Install Mhsendmail
@@ -96,7 +101,6 @@ ADD .docker/config/custom-xdebug.ini /usr/local/etc/php/conf.d/custom-xdebug.ini
 COPY .docker/bin/* /usr/local/bin/
 COPY .docker/users/* /var/www/
 RUN chmod +x /usr/local/bin/*
-RUN ls -la /usr/local/bin/
 RUN ln -s /etc/apache2/sites-available/magento.conf /etc/apache2/sites-enabled/magento.conf
 
 RUN curl -o /etc/bash_completion.d/m2install-bash-completion https://raw.githubusercontent.com/yvoronoy/m2install/master/m2install-bash-completion

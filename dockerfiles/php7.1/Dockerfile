@@ -14,7 +14,7 @@ RUN apt-get update \
 	&& DEBIAN_FRONTEND=noninteractive apt-get install -y \
 	libfreetype6-dev \
 	libicu-dev \
-  libssl-dev \
+	libssl-dev \
 	libjpeg62-turbo-dev \
 	libmcrypt-dev \
 	libedit-dev \
@@ -23,7 +23,7 @@ RUN apt-get update \
 	apt-utils \
 	gnupg \
 	redis-tools \
-	mysql-client \
+	default-mysql-client \
 	git \
 	vim \
 	wget \
@@ -64,7 +64,7 @@ RUN apt-get update \
 
 # Install Node, NVM, NPM and Grunt
 
-RUN curl -sL https://deb.nodesource.com/setup_6.x | bash - \
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
   	&& apt-get install -y nodejs build-essential \
     && curl https://raw.githubusercontent.com/creationix/nvm/v0.16.1/install.sh | sh \
     && npm i -g grunt-cli yarn
