@@ -1,6 +1,12 @@
 version: "2"
 services:
-  apache:
+  php70-apache:
+    volumes:
+      - <project_name>-sync:/var/www/html:nocopy
+  php71-apache:
+    volumes:
+      - <project_name>-sync:/var/www/html:nocopy
+  php72-apache:
     volumes:
       - <project_name>-sync:/var/www/html:nocopy
 volumes:
