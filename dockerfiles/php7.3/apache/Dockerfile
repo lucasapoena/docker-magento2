@@ -18,6 +18,7 @@ RUN apt-get update \
 	libedit-dev \
 	libedit2 \
 	libxslt1-dev \
+	libzip-dev \
 	apt-utils \
 	gnupg \
 	redis-tools \
